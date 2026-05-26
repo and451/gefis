@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: syscont
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: BASE_PATH
+        value: /
+      - key: DATABASE_URL
+        sync: false
+    disk:
+      name: syscont-data
+      mountPath: /data
+      sizeGB: 1

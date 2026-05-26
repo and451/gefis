@@ -1,0 +1,1208 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.2.0
+  description: SysCont Web - Agência Espacial Brasileira - Sistema de Gestão de Contratos Administrativos
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: contratos
+    description: Gestão de contratos administrativos
+  - name: fornecedores
+    description: Gestão de fornecedores
+  - name: aditivos
+    description: Aditivos e apostilas contratuais
+  - name: medicoes
+    description: Medições e pagamentos
+  - name: alertas
+    description: Alertas e notificações
+  - name: dashboard
+    description: Dados agregados para dashboard
+  - name: pncp
+    description: Integração com o PNCP
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ──────────────────────────────
+  # CONTRATOS
+  # ──────────────────────────────
+  /contratos:
+    get:
+      operationId: listContratos
+      tags: [contratos]
+      summary: Listar contratos
+      parameters:
+        - name: pagina
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: tamanhoPagina
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [vigente, encerrado, rescindido, suspenso, todos]
+        - name: busca
+          in: query
+          schema: { type: string }
+        - name: fornecedorId
+          in: query
+          schema: { type: ["integer", "null"] }
+      responses:
+        "200":
+          description: Lista de contratos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContratoListResponse"
+    post:
+      operationId: createContrato
+      tags: [contratos]
+      summary: Cadastrar contrato
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContratoInput"
+      responses:
+        "201":
+          description: Contrato criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contrato"
+
+  /contratos/{id}:
+    get:
+      operationId: getContrato
+      tags: [contratos]
+      summary: Obter contrato pelo ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Contrato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contrato"
+        "404":
+          description: Não encontrado
+    patch:
+      operationId: updateContrato
+      tags: [contratos]
+      summary: Atualizar contrato
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContratoUpdate"
+      responses:
+        "200":
+          description: Contrato atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contrato"
+    delete:
+      operationId: deleteContrato
+      tags: [contratos]
+      summary: Excluir contrato
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Removido
+
+  /contratos/{id}/aditivos:
+    get:
+      operationId: listAditivosByContrato
+      tags: [aditivos]
+      summary: Listar aditivos do contrato
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lista de aditivos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Aditivo"
+
+  /contratos/{id}/medicoes:
+    get:
+      operationId: listMedicoesByContrato
+      tags: [medicoes]
+      summary: Listar medições do contrato
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Lista de medições
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Medicao"
+
+  # ──────────────────────────────
+  # FORNECEDORES
+  # ──────────────────────────────
+  /fornecedores:
+    get:
+      operationId: listFornecedores
+      tags: [fornecedores]
+      summary: Listar fornecedores
+      parameters:
+        - name: busca
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista de fornecedores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Fornecedor"
+    post:
+      operationId: createFornecedor
+      tags: [fornecedores]
+      summary: Cadastrar fornecedor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FornecedorInput"
+      responses:
+        "201":
+          description: Fornecedor criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fornecedor"
+
+  /fornecedores/{id}:
+    get:
+      operationId: getFornecedor
+      tags: [fornecedores]
+      summary: Obter fornecedor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Fornecedor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fornecedor"
+    patch:
+      operationId: updateFornecedor
+      tags: [fornecedores]
+      summary: Atualizar fornecedor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FornecedorUpdate"
+      responses:
+        "200":
+          description: Fornecedor atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fornecedor"
+    delete:
+      operationId: deleteFornecedor
+      tags: [fornecedores]
+      summary: Excluir fornecedor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Removido
+
+  # ──────────────────────────────
+  # ADITIVOS
+  # ──────────────────────────────
+  /aditivos:
+    post:
+      operationId: createAditivo
+      tags: [aditivos]
+      summary: Registrar aditivo ou apostila
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AditivoInput"
+      responses:
+        "201":
+          description: Aditivo criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Aditivo"
+
+  /aditivos/{id}:
+    patch:
+      operationId: updateAditivo
+      tags: [aditivos]
+      summary: Atualizar aditivo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AditivoUpdate"
+      responses:
+        "200":
+          description: Aditivo atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Aditivo"
+    delete:
+      operationId: deleteAditivo
+      tags: [aditivos]
+      summary: Excluir aditivo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Removido
+
+  # ──────────────────────────────
+  # MEDIÇÕES
+  # ──────────────────────────────
+  /medicoes:
+    post:
+      operationId: createMedicao
+      tags: [medicoes]
+      summary: Registrar medição
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicaoInput"
+      responses:
+        "201":
+          description: Medição criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicao"
+
+  /medicoes/{id}:
+    get:
+      operationId: getMedicao
+      tags: [medicoes]
+      summary: Obter medição
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Medição
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicao"
+    patch:
+      operationId: updateMedicao
+      tags: [medicoes]
+      summary: Atualizar medição
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicaoUpdate"
+      responses:
+        "200":
+          description: Medição atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicao"
+    delete:
+      operationId: deleteMedicao
+      tags: [medicoes]
+      summary: Excluir medição
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Removido
+
+  /medicoes/{id}/aprovar:
+    patch:
+      operationId: aprovarMedicao
+      tags: [medicoes]
+      summary: Aprovar medição
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Medição aprovada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicao"
+
+  /medicoes/{id}/pagar:
+    patch:
+      operationId: pagarMedicao
+      tags: [medicoes]
+      summary: Registrar pagamento da medição
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicaoPagamentoInput"
+      responses:
+        "200":
+          description: Medição paga
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Medicao"
+
+  # ──────────────────────────────
+  # ALERTAS
+  # ──────────────────────────────
+  /alertas:
+    get:
+      operationId: listAlertas
+      tags: [alertas]
+      summary: Listar alertas de vencimento e pendências
+      parameters:
+        - name: lido
+          in: query
+          schema: { type: ["boolean", "null"] }
+      responses:
+        "200":
+          description: Lista de alertas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alerta"
+
+  /alertas/{id}/marcar-lido:
+    patch:
+      operationId: marcarAlertaLido
+      tags: [alertas]
+      summary: Marcar alerta como lido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Alerta atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alerta"
+
+  # ──────────────────────────────
+  # DASHBOARD
+  # ──────────────────────────────
+  /dashboard/resumo:
+    get:
+      operationId: getDashboardResumo
+      tags: [dashboard]
+      summary: Resumo executivo — totais, indicadores e execução financeira
+      responses:
+        "200":
+          description: Resumo do dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResumo"
+
+  /dashboard/vencimentos:
+    get:
+      operationId: getDashboardVencimentos
+      tags: [dashboard]
+      summary: Contratos com vencimento nos próximos 90 dias
+      responses:
+        "200":
+          description: Lista de vencimentos próximos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContratoVencimento"
+
+  /dashboard/por-status:
+    get:
+      operationId: getDashboardPorStatus
+      tags: [dashboard]
+      summary: Contagem de contratos agrupada por status
+      responses:
+        "200":
+          description: Distribuição por status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusCount"
+
+  /dashboard/por-modalidade:
+    get:
+      operationId: getDashboardPorModalidade
+      tags: [dashboard]
+      summary: Contagem de contratos por modalidade de licitação
+      responses:
+        "200":
+          description: Distribuição por modalidade
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModalidadeCount"
+
+  /dashboard/execucao-mensal:
+    get:
+      operationId: getDashboardExecucaoMensal
+      tags: [dashboard]
+      summary: Execução financeira mensal (medições pagas por mês)
+      responses:
+        "200":
+          description: Execução mensal dos últimos 12 meses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExecucaoMensal"
+
+  # ──────────────────────────────
+  # PNCP
+  # ──────────────────────────────
+  /pncp/buscar:
+    get:
+      operationId: buscarPncp
+      tags: [pncp]
+      summary: Buscar contratos no PNCP
+      parameters:
+        - name: cnpj
+          in: query
+          schema: { type: ["string", "null"] }
+        - name: dataInicial
+          in: query
+          required: true
+          schema: { type: string, description: "Formato YYYYMMDD" }
+        - name: dataFinal
+          in: query
+          required: true
+          schema: { type: string, description: "Formato YYYYMMDD" }
+        - name: pagina
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: tamanhoPagina
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        "200":
+          description: Contratos encontrados no PNCP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PncpResultado"
+
+  /pncp/importar:
+    post:
+      operationId: importarPncp
+      tags: [pncp]
+      summary: Importar contrato do PNCP para o sistema local
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PncpImportInput"
+      responses:
+        "201":
+          description: Contrato importado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contrato"
+
+  /pncp/orgao/{cnpj}:
+    get:
+      operationId: buscarOrgaoPncp
+      tags: [pncp]
+      summary: Buscar informações de órgão no PNCP pelo CNPJ
+      parameters:
+        - name: cnpj
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Dados do órgão
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrgaoPncp"
+
+  # ──────────────────────────────
+  # COMPRASNET
+  # ──────────────────────────────
+  /comprasnet/buscar:
+    get:
+      operationId: buscarComprasnet
+      tags: [pncp]
+      summary: Buscar contratos da AEB no ComprasNet (contratos.comprasnet.gov.br)
+      parameters:
+        - name: unidadeCodigo
+          in: query
+          schema: { type: string, default: "203001" }
+        - name: busca
+          in: query
+          schema: { type: ["string", "null"] }
+      responses:
+        "200":
+          description: Contratos da AEB no ComprasNet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComprasnetResultado"
+
+  /comprasnet/importar:
+    post:
+      operationId: importarComprasnet
+      tags: [pncp]
+      summary: Importar contrato do ComprasNet para o sistema local
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComprasnetImportInput"
+      responses:
+        "201":
+          description: Contrato importado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contrato"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status: { type: string }
+      required: [status]
+
+    # ── Contrato ──────────────────
+    Contrato:
+      type: object
+      required:
+        - id
+        - numeroContrato
+        - objeto
+        - fornecedorId
+        - valorInicial
+        - valorAtual
+        - valorPago
+        - percentualExecucao
+        - dataAssinatura
+        - dataVigenciaInicio
+        - dataVigenciaFim
+        - status
+        - modalidade
+        - createdAt
+        - updatedAt
+      properties:
+        id: { type: integer }
+        numeroContrato: { type: string }
+        numeroControlePncp: { type: ["string", "null"] }
+        processo: { type: ["string", "null"] }
+        objeto: { type: string }
+        fornecedorId: { type: integer }
+        fornecedor: { $ref: "#/components/schemas/Fornecedor" }
+        valorInicial: { type: number }
+        valorAtual: { type: number }
+        valorPago: { type: number }
+        percentualExecucao: { type: number }
+        fiscal: { type: ["string", "null"] }
+        gestor: { type: ["string", "null"] }
+        dataAssinatura: { type: string, format: date }
+        dataVigenciaInicio: { type: string, format: date }
+        dataVigenciaFim: { type: string, format: date }
+        status:
+          type: string
+          enum: [vigente, encerrado, rescindido, suspenso]
+        modalidade:
+          type: string
+          enum:
+            - pregao_eletronico
+            - pregao_presencial
+            - concorrencia
+            - tomada_de_precos
+            - convite
+            - dispensa
+            - inexigibilidade
+            - outros
+        categoriaProcesso: { type: ["string", "null"] }
+        unidadeGestora: { type: ["string", "null"] }
+        observacoes: { type: ["string", "null"] }
+        numeroParcelas: { type: ["integer", "null"] }
+        aditivos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aditivo"
+        medicoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Medicao"
+        alertas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alerta"
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ContratoInput:
+      type: object
+      required:
+        - numeroContrato
+        - objeto
+        - fornecedorId
+        - valorInicial
+        - dataAssinatura
+        - dataVigenciaInicio
+        - dataVigenciaFim
+        - modalidade
+      properties:
+        numeroContrato: { type: string }
+        numeroControlePncp: { type: ["string", "null"] }
+        processo: { type: ["string", "null"] }
+        objeto: { type: string }
+        fornecedorId: { type: integer }
+        valorInicial: { type: number }
+        fiscal: { type: ["string", "null"] }
+        gestor: { type: ["string", "null"] }
+        dataAssinatura: { type: string, format: date }
+        dataVigenciaInicio: { type: string, format: date }
+        dataVigenciaFim: { type: string, format: date }
+        modalidade:
+          type: string
+          enum:
+            - pregao_eletronico
+            - pregao_presencial
+            - concorrencia
+            - tomada_de_precos
+            - convite
+            - dispensa
+            - inexigibilidade
+            - outros
+        categoriaProcesso: { type: ["string", "null"] }
+        unidadeGestora: { type: ["string", "null"] }
+        observacoes: { type: ["string", "null"] }
+        numeroParcelas: { type: ["integer", "null"] }
+
+    ContratoUpdate:
+      type: object
+      properties:
+        numeroContrato: { type: string }
+        objeto: { type: string }
+        valorInicial: { type: number }
+        dataVigenciaFim: { type: string, format: date }
+        status:
+          type: string
+          enum: [vigente, encerrado, rescindido, suspenso]
+        modalidade:
+          type: string
+          enum:
+            - pregao_eletronico
+            - pregao_presencial
+            - concorrencia
+            - tomada_de_precos
+            - convite
+            - dispensa
+            - inexigibilidade
+            - outros
+        fiscal: { type: ["string", "null"] }
+        gestor: { type: ["string", "null"] }
+        categoriaProcesso: { type: ["string", "null"] }
+        unidadeGestora: { type: ["string", "null"] }
+        observacoes: { type: ["string", "null"] }
+
+    ContratoListResponse:
+      type: object
+      required: [data, totalRegistros, totalPaginas, numeroPagina]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contrato"
+        totalRegistros: { type: integer }
+        totalPaginas: { type: integer }
+        numeroPagina: { type: integer }
+
+    ContratoVencimento:
+      type: object
+      required: [id, numeroContrato, objeto, dataVigenciaFim, diasRestantes, status, nivelAlerta]
+      properties:
+        id: { type: integer }
+        numeroContrato: { type: string }
+        objeto: { type: string }
+        fornecedorNome: { type: string }
+        fiscal: { type: ["string", "null"] }
+        dataVigenciaFim: { type: string, format: date }
+        diasRestantes: { type: integer }
+        valorAtual: { type: number }
+        percentualExecucao: { type: number }
+        status: { type: string }
+        nivelAlerta:
+          type: string
+          enum: [critico, urgente, atencao]
+
+    # ── Fornecedor ────────────────
+    Fornecedor:
+      type: object
+      required: [id, nome, cnpjCpf, tipoPessoa, createdAt]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cnpjCpf: { type: string }
+        tipoPessoa:
+          type: string
+          enum: [PJ, PF]
+        email: { type: ["string", "null"] }
+        telefone: { type: ["string", "null"] }
+        endereco: { type: ["string", "null"] }
+        cidade: { type: ["string", "null"] }
+        uf: { type: ["string", "null"] }
+        ativo: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    FornecedorInput:
+      type: object
+      required: [nome, cnpjCpf, tipoPessoa]
+      properties:
+        nome: { type: string }
+        cnpjCpf: { type: string }
+        tipoPessoa:
+          type: string
+          enum: [PJ, PF]
+        email: { type: ["string", "null"] }
+        telefone: { type: ["string", "null"] }
+        endereco: { type: ["string", "null"] }
+        cidade: { type: ["string", "null"] }
+        uf: { type: ["string", "null"] }
+
+    FornecedorUpdate:
+      type: object
+      properties:
+        nome: { type: string }
+        email: { type: ["string", "null"] }
+        telefone: { type: ["string", "null"] }
+        endereco: { type: ["string", "null"] }
+        cidade: { type: ["string", "null"] }
+        uf: { type: ["string", "null"] }
+        ativo: { type: boolean }
+
+    # ── Aditivo ───────────────────
+    Aditivo:
+      type: object
+      required:
+        - id
+        - contratoId
+        - tipo
+        - numero
+        - dataAssinatura
+        - objeto
+        - createdAt
+      properties:
+        id: { type: integer }
+        contratoId: { type: integer }
+        tipo:
+          type: string
+          enum: [aditivo, apostila, rescisao, suspensao]
+        numero: { type: string }
+        dataAssinatura: { type: string, format: date }
+        dataNovaVigencia: { type: ["string", "null"], format: date }
+        valorAcrescimo: { type: ["number", "null"] }
+        objeto: { type: string }
+        observacoes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+
+    AditivoInput:
+      type: object
+      required: [contratoId, tipo, numero, dataAssinatura, objeto]
+      properties:
+        contratoId: { type: integer }
+        tipo:
+          type: string
+          enum: [aditivo, apostila, rescisao, suspensao]
+        numero: { type: string }
+        dataAssinatura: { type: string, format: date }
+        dataNovaVigencia: { type: ["string", "null"], format: date }
+        valorAcrescimo: { type: ["number", "null"] }
+        objeto: { type: string }
+        observacoes: { type: ["string", "null"] }
+
+    AditivoUpdate:
+      type: object
+      properties:
+        tipo:
+          type: string
+          enum: [aditivo, apostila, rescisao, suspensao]
+        dataNovaVigencia: { type: ["string", "null"], format: date }
+        valorAcrescimo: { type: ["number", "null"] }
+        objeto: { type: string }
+        observacoes: { type: ["string", "null"] }
+
+    # ── Medição ───────────────────
+    Medicao:
+      type: object
+      required:
+        - id
+        - contratoId
+        - numero
+        - mesReferencia
+        - periodoInicio
+        - periodoFim
+        - valorMedido
+        - valorPago
+        - situacao
+        - createdAt
+      properties:
+        id: { type: integer }
+        contratoId: { type: integer }
+        numero: { type: string }
+        mesReferencia: { type: string, description: "MM/YYYY" }
+        periodoInicio: { type: string, format: date }
+        periodoFim: { type: string, format: date }
+        valorMedido: { type: number }
+        valorGlosa: { type: number }
+        valorPago: { type: number }
+        situacao:
+          type: string
+          enum: [pendente, em_analise, aprovada, paga, glosada, cancelada]
+        numeroNotaFiscal: { type: ["string", "null"] }
+        dataNotaFiscal: { type: ["string", "null"], format: date }
+        observacoes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    MedicaoInput:
+      type: object
+      required: [contratoId, numero, mesReferencia, periodoInicio, periodoFim, valorMedido]
+      properties:
+        contratoId: { type: integer }
+        numero: { type: string }
+        mesReferencia: { type: string, description: "MM/YYYY" }
+        periodoInicio: { type: string, format: date }
+        periodoFim: { type: string, format: date }
+        valorMedido: { type: number }
+        valorGlosa: { type: ["number", "null"] }
+        numeroNotaFiscal: { type: ["string", "null"] }
+        dataNotaFiscal: { type: ["string", "null"], format: date }
+        observacoes: { type: ["string", "null"] }
+
+    MedicaoUpdate:
+      type: object
+      properties:
+        numero: { type: string }
+        mesReferencia: { type: string }
+        periodoInicio: { type: string, format: date }
+        periodoFim: { type: string, format: date }
+        valorMedido: { type: number }
+        valorGlosa: { type: ["number", "null"] }
+        situacao:
+          type: string
+          enum: [pendente, em_analise, aprovada, paga, glosada, cancelada]
+        numeroNotaFiscal: { type: ["string", "null"] }
+        dataNotaFiscal: { type: ["string", "null"], format: date }
+        observacoes: { type: ["string", "null"] }
+
+    MedicaoPagamentoInput:
+      type: object
+      required: [valorPago]
+      properties:
+        valorPago: { type: number }
+        numeroNotaFiscal: { type: ["string", "null"] }
+        dataNotaFiscal: { type: ["string", "null"], format: date }
+        observacoes: { type: ["string", "null"] }
+
+    # ── Alerta ────────────────────
+    Alerta:
+      type: object
+      required: [id, contratoId, tipo, mensagem, lido, createdAt]
+      properties:
+        id: { type: integer }
+        contratoId: { type: integer }
+        contratoNumero: { type: ["string", "null"] }
+        tipo:
+          type: string
+          enum: [vencimento_proximo, vencido, renovacao_necessaria, pendencia]
+        mensagem: { type: string }
+        lido: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    # ── Dashboard ─────────────────
+    DashboardResumo:
+      type: object
+      required:
+        - totalContratos
+        - contratoVigentes
+        - contratosVencendo30dias
+        - contratosVencendo90dias
+        - contratosVencidos
+        - valorTotalAtivo
+        - valorPagoTotal
+        - percentualExecucaoMedio
+        - totalFornecedores
+        - alertasNaoLidos
+        - medicoesPendentes
+      properties:
+        totalContratos: { type: integer }
+        contratoVigentes: { type: integer }
+        contratosVencendo30dias: { type: integer }
+        contratosVencendo90dias: { type: integer }
+        contratosVencidos: { type: integer }
+        valorTotalAtivo: { type: number }
+        valorPagoTotal: { type: number }
+        percentualExecucaoMedio: { type: number }
+        totalFornecedores: { type: integer }
+        alertasNaoLidos: { type: integer }
+        medicoesPendentes: { type: integer }
+
+    StatusCount:
+      type: object
+      required: [status, quantidade]
+      properties:
+        status: { type: string }
+        quantidade: { type: integer }
+
+    ModalidadeCount:
+      type: object
+      required: [modalidade, quantidade, valorTotal]
+      properties:
+        modalidade: { type: string }
+        quantidade: { type: integer }
+        valorTotal: { type: number }
+
+    ExecucaoMensal:
+      type: object
+      required: [mes, valorPago, quantidadeMedicoes]
+      properties:
+        mes: { type: string, description: "MM/YYYY" }
+        valorPago: { type: number }
+        quantidadeMedicoes: { type: integer }
+
+    # ── PNCP ──────────────────────
+    PncpResultado:
+      type: object
+      required: [data, totalRegistros, totalPaginas, numeroPagina]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PncpContrato"
+        totalRegistros: { type: integer }
+        totalPaginas: { type: integer }
+        numeroPagina: { type: integer }
+
+    PncpContrato:
+      type: object
+      required:
+        - numeroControlePNCP
+        - objeto
+        - orgaoEntidade
+        - fornecedorNome
+        - valorGlobal
+        - dataAssinatura
+        - dataVigenciaInicio
+        - dataVigenciaFim
+      properties:
+        numeroControlePNCP: { type: string }
+        numeroControlePncpCompra: { type: ["string", "null"] }
+        anoContrato: { type: integer }
+        numeroContratoEmpenho: { type: ["string", "null"] }
+        processo: { type: ["string", "null"] }
+        objeto: { type: string }
+        orgaoEntidade:
+          type: object
+          properties:
+            cnpj: { type: string }
+            razaoSocial: { type: string }
+        unidadeOrgao:
+          type: object
+          properties:
+            codigoUnidade: { type: string }
+            nomeUnidade: { type: string }
+            ufSigla: { type: string }
+            municipioNome: { type: string }
+        fornecedorNome: { type: string }
+        niFornecedor: { type: string }
+        tipoPessoa: { type: string }
+        tipoContrato:
+          type: object
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        categoriaProcesso:
+          type: object
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        valorInicial: { type: number }
+        valorGlobal: { type: number }
+        dataAssinatura: { type: string }
+        dataVigenciaInicio: { type: string }
+        dataVigenciaFim: { type: string }
+        dataPublicacaoPncp: { type: string }
+
+    PncpImportInput:
+      type: object
+      required: [numeroControlePNCP]
+      properties:
+        numeroControlePNCP: { type: string }
+        fornecedorId: { type: ["integer", "null"] }
+
+    OrgaoPncp:
+      type: object
+      required: [cnpj, razaoSocial]
+      properties:
+        cnpj: { type: string }
+        razaoSocial: { type: string }
+        nomeFantasia: { type: ["string", "null"] }
+        poderId: { type: ["string", "null"] }
+        esferaId: { type: ["string", "null"] }
+        statusAtivo: { type: boolean }
+
+    ComprasnetContrato:
+      type: object
+      required: [id, numero, objeto, fornecedor]
+      properties:
+        id: { type: integer }
+        numero: { type: string }
+        objeto: { type: string }
+        processo: { type: ["string", "null"] }
+        fornecedor:
+          type: object
+          properties:
+            nome: { type: string }
+            cnpj_cpf_idgener: { type: ["string", "null"] }
+            tipo: { type: ["string", "null"] }
+        situacao: { type: ["string", "null"] }
+        modalidade: { type: ["string", "null"] }
+        categoria: { type: ["string", "null"] }
+        data_assinatura: { type: ["string", "null"] }
+        vigencia_inicio: { type: ["string", "null"] }
+        vigencia_fim: { type: ["string", "null"] }
+        valor_inicial: { type: ["string", "null"] }
+        valor_global: { type: ["string", "null"] }
+        num_parcelas: { type: ["integer", "null"] }
+
+    ComprasnetResultado:
+      type: object
+      required: [data, total]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComprasnetContrato"
+        total: { type: integer }
+
+    ComprasnetImportInput:
+      type: object
+      required: [contratoId]
+      properties:
+        contratoId: { type: integer }
+        fornecedorId: { type: ["integer", "null"] }

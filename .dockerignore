@@ -1,0 +1,10 @@
+node_modules
+*.tsbuildinfo
+.cache
+.local
+dist
+.git
+.replit
+.replitignore
+*.md
+!.env.example
