@@ -24,9 +24,11 @@ COPY scripts/package.json ./scripts/
 RUN pnpm install || true
 RUN pnpm rebuild esbuild
 
-# Copia o restante do codigo e faz o build
+# Copia o restante do codigo e faz o build (exclui scripts do typecheck)
 COPY . .
-RUN pnpm run build
+RUN pnpm run typecheck:libs \
+  && pnpm -r --filter "./artifacts/**" --if-present run typecheck \
+  && pnpm -r --if-present run build
 
 ENV NODE_ENV=production
 ENV PORT=8080
