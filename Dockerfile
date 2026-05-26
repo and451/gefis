@@ -22,7 +22,7 @@ COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY scripts/package.json ./scripts/
 
 # Instala dependencias do workspace
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copia o restante do codigo e faz o build
 COPY . .
