@@ -24,9 +24,10 @@ COPY scripts/package.json ./scripts/
 RUN pnpm install || true
 RUN pnpm rebuild esbuild
 
-# Copia o restante do codigo e faz o build
+# Copia o restante do codigo e faz o build (apenas os artefatos de producao)
 COPY . .
-RUN pnpm -r --if-present run build
+RUN pnpm --filter @workspace/api-server run build \
+  && pnpm --filter @workspace/syscont-web run build
 
 ENV NODE_ENV=production
 ENV PORT=8080
