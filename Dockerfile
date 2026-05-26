@@ -21,7 +21,8 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY scripts/package.json ./scripts/
 
-# Instala dependencias do workspace
+# Permite scripts de build (esbuild precisa compilar binarios nativos)
+RUN pnpm config set ignore-build-scripts false
 RUN pnpm install
 
 # Copia o restante do codigo e faz o build
