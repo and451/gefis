@@ -22,8 +22,7 @@ COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY scripts/package.json ./scripts/
 
 # Permite scripts de build (esbuild precisa compilar binarios nativos)
-RUN pnpm config set ignore-build-scripts false
-RUN pnpm install
+RUN npm_config_ignore_build_scripts=false pnpm install
 
 # Copia o restante do codigo e faz o build
 COPY . .
