@@ -26,7 +26,8 @@ RUN pnpm rebuild esbuild
 
 # Copia o restante do codigo e faz o build (apenas os artefatos de producao)
 COPY . .
-RUN pnpm --filter @workspace/api-server run build \
+RUN chmod +x /app/scripts/start.sh \
+  && pnpm --filter @workspace/api-server run build \
   && pnpm --filter @workspace/syscont-web run build
 
 ENV NODE_ENV=production
@@ -35,4 +36,4 @@ ENV BASE_PATH=/
 
 EXPOSE 8080
 
-CMD ["node", "--enable-source-maps", "./artifacts/api-server/dist/index.mjs"]
+CMD ["/bin/sh", "/app/scripts/start.sh"]

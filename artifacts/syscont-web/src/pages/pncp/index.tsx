@@ -484,7 +484,7 @@ export default function ConsultaPortais() {
           </p>
         </div>
 
-        <Tabs defaultValue="comprasnet">
+        <Tabs defaultValue="pncp">
           <TabsList className="grid w-full grid-cols-2 max-w-sm">
             <TabsTrigger value="comprasnet" className="flex items-center gap-1.5">
               <Database className="h-3.5 w-3.5" />ComprasNet
