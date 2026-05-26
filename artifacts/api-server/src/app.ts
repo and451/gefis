@@ -35,7 +35,7 @@ app.use("/api", router);
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const staticDir = path.resolve(__dirname, "../../../syscont-web/dist/public");
+  const staticDir = path.resolve(__dirname, "../../syscont-web/dist/public");
   app.use(express.static(staticDir));
   app.get("*", (req, res) => {
     res.sendFile(path.join(staticDir, "index.html"));
