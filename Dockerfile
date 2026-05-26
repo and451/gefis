@@ -21,8 +21,8 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY scripts/package.json ./scripts/
 
-# Permite scripts de build (esbuild precisa compilar binarios nativos)
-RUN npm_config_ignore_build_scripts=false pnpm install
+RUN pnpm install || true
+RUN pnpm rebuild esbuild
 
 # Copia o restante do codigo e faz o build
 COPY . .
