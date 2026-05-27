@@ -134,7 +134,7 @@ async function seed() {
                    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
     for (const contratoId of contratoIds) {
-      if (Math.random() > 0.3) continue; // so 30% dos contratos
+      if (Math.random() > 0.3) continue;
 
       const c = await client.query(
         "SELECT valor_atual, data_assinatura, data_vigencia_fim FROM contratos WHERE id = $1",
@@ -144,7 +144,7 @@ async function seed() {
 
       const valorAtual = parseFloat(c.rows[0].valor_atual);
       const dataInicio = new Date(c.rows[0].data_assinatura);
-      const numMedicoes = Math.floor(Math.random() * 3) + 2; // 2 a 4 medicoes
+      const numMedicoes = Math.floor(Math.random() * 3) + 2;
 
       let valorTotalPago = 0;
       for (let i = 0; i < numMedicoes; i++) {
@@ -157,7 +157,7 @@ async function seed() {
         periodoFim.setDate(0);
 
         const valorMedido = Math.round((valorAtual / numMedicoes) * 100) / 100;
-        const valorPago = i < numMedicoes - 1 ? valorMedido : 0; // ultima pendente
+        const valorPago = i < numMedicoes - 1 ? valorMedido : 0;
         valorTotalPago += valorPago;
 
         await client.query(
@@ -179,7 +179,6 @@ async function seed() {
         medicoesCriadas++;
       }
 
-      // Atualiza valor_pago no contrato
       await client.query(
         "UPDATE contratos SET valor_pago = $1 WHERE id = $2",
         [String(Math.round(valorTotalPago * 100) / 100), contratoId]
@@ -189,36 +188,38 @@ async function seed() {
     console.log(`Medicoes: ${medicoesCriadas} criadas.`);
 
     // ============================================================
-    // Gerar alertas para contratos vencendo em 90 e 30 dias
+    // Gerar alertas para contratos vencendo/vencidos
     // ============================================================
     console.log("Gerando alertas de vencimento...");
     let alertasCriados = 0;
     const hojeStr = hoje.toISOString().split("T")[0];
-    const em30 = new Date(hoje.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    const em90 = new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const vencendo = await client.query(
+    // Contratos que vencem em ate 90 dias OU ja venceram nos ultimos 90 dias
+    const vencendoOuVencidos = await client.query(
       `SELECT id, numero_contrato, data_vigencia_fim, objeto
        FROM contratos
        WHERE status = 'vigente'
-         AND data_vigencia_fim <= $1
-         AND data_vigencia_fim >= $2`,
-      [em90, hojeStr]
+         AND data_vigencia_fim <= $1`,
+      [new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]]
     );
 
-    for (const c of vencendo.rows) {
+    for (const c of vencendoOuVencidos.rows) {
       const fim = new Date(c.data_vigencia_fim);
       const dias = Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-      let tipo = "vencimento_90d";
-      let msg = `Contrato ${c.numero_contrato} vence em ${dias} dias.`;
 
-      if (dias <= 30) {
-        tipo = "vencimento_30d";
-        msg = `Contrato ${c.numero_contrato} vence em ${dias} dias. Atenção urgente!`;
-      }
-      if (dias <= 15) {
+      let tipo, msg;
+      if (dias < 0) {
+        tipo = "vencido";
+        msg = `Contrato ${c.numero_contrato} venceu há ${Math.abs(dias)} dias. Verificar situação.`;
+      } else if (dias <= 15) {
         tipo = "vencimento_critico";
-        msg = `Contrato ${c.numero_contrato} vence em ${dias} dias. Ação imediata necessária!`;
+        msg = `Contrato ${c.numero_contrato} vence em ${dias} dias. Acao imediata necessaria!`;
+      } else if (dias <= 30) {
+        tipo = "vencimento_30d";
+        msg = `Contrato ${c.numero_contrato} vence em ${dias} dias. Atencao urgente!`;
+      } else {
+        tipo = "vencimento_90d";
+        msg = `Contrato ${c.numero_contrato} vence em ${dias} dias.`;
       }
 
       // Evita duplicados
