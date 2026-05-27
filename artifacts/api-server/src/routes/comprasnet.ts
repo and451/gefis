@@ -180,32 +180,40 @@ router.post("/importar", async (req, res) => {
 
   const modalidade = modalidadeMap[comprasnetContrato.modalidade ?? ""] ?? "outros";
 
-  const [created] = await db
-    .insert(contratosTable)
-    .values({
-      numeroContrato: comprasnetContrato.numero || String(contratoId),
-      objeto: comprasnetContrato.objeto,
-      fornecedorId: resolvedFornecedorId,
-      valorInicial: String(valorInicial),
-      valorAtual: String(valorAtual),
-      dataAssinatura,
-      dataVigenciaInicio,
-      dataVigenciaFim,
-      status: "vigente",
-      modalidade,
-      categoriaProcesso: comprasnetContrato.categoria ?? null,
-      processo: comprasnetContrato.processo ?? null,
-      numeroParcelas: comprasnetContrato.num_parcelas ?? null,
-      observacoes: `Importado do ComprasNet. ID: ${contratoId}`,
-    })
-    .returning();
+  try {
+    const [created] = await db
+      .insert(contratosTable)
+      .values({
+        numeroContrato: comprasnetContrato.numero || String(contratoId),
+        objeto: comprasnetContrato.objeto,
+        fornecedorId: resolvedFornecedorId,
+        valorInicial: String(valorInicial),
+        valorAtual: String(valorAtual),
+        dataAssinatura,
+        dataVigenciaInicio,
+        dataVigenciaFim,
+        status: "vigente",
+        modalidade,
+        categoriaProcesso: comprasnetContrato.categoria ?? null,
+        processo: comprasnetContrato.processo ?? null,
+        numeroParcelas: comprasnetContrato.num_parcelas ?? null,
+        observacoes: `Importado do ComprasNet. ID: ${contratoId}`,
+      })
+      .returning();
 
-  const [fornecedor] = await db
-    .select()
-    .from(fornecedoresTable)
-    .where(eq(fornecedoresTable.id, resolvedFornecedorId));
+    const [fornecedor] = await db
+      .select()
+      .from(fornecedoresTable)
+      .where(eq(fornecedoresTable.id, resolvedFornecedorId));
 
-  return res.status(201).json({ ...created, fornecedor: fornecedor ?? null, aditivos: [], alertas: [] });
+    return res.status(201).json({ ...created, fornecedor: fornecedor ?? null, aditivos: [], alertas: [] });
+  } catch (err: any) {
+    req.log.error({ err, contratoId, comprasnetContrato }, "Erro ao importar contrato do ComprasNet");
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "Contrato já existe no sistema." });
+    }
+    return res.status(500).json({ error: "Erro ao salvar contrato no banco de dados.", detail: err.message });
+  }
 });
 
 export default router;
