@@ -29,12 +29,16 @@ router.get("/buscar", async (req, res) => {
 
   try {
     const response = await fetch(url.toString(), {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(15000),
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "SysCont/1.0 (Agencia Espacial Brasileira)",
+      },
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      req.log.warn({ status: response.status, url: url.toString(), errorText }, "PNCP retornou erro HTTP");
       return res.status(response.status).json({ error: "Erro na consulta ao PNCP", detail: errorText });
     }
 
@@ -51,9 +55,12 @@ router.get("/buscar", async (req, res) => {
       totalPaginas: data.totalPaginas ?? 0,
       numeroPagina: data.numeroPagina ?? pagina,
     });
-  } catch (err) {
-    req.log.error({ err }, "Erro ao consultar PNCP");
-    return res.status(502).json({ error: "Falha na comunicação com o PNCP" });
+  } catch (err: any) {
+    req.log.error({ err, url: url.toString() }, "Erro ao consultar PNCP");
+    if (err.name === "TimeoutError") {
+      return res.status(504).json({ error: "Tempo de consulta ao PNCP excedido. Tente novamente mais tarde." });
+    }
+    return res.status(502).json({ error: "Falha na comunicação com o PNCP", detail: err.message });
   }
 });
 
